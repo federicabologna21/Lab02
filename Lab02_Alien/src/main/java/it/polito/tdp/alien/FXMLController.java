@@ -5,8 +5,8 @@
 package it.polito.tdp.alien;
 
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.ResourceBundle;
-import java.util.TreeMap;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -34,7 +34,7 @@ public class FXMLController {
     @FXML // fx:id="btnClear"
     private Button btnClear; // Value injected by FXMLLoader
     
-    TreeMap <String, Dizionario> dizionario = new TreeMap <>();
+    LinkedList <WordEnhanced> dizionario = new LinkedList <>();
 
     @FXML
     void doTranslate(ActionEvent event) {
@@ -56,21 +56,34 @@ public class FXMLController {
         		return ;
         		
         	}
-        	else {
+        	
     		// controllo se esiste gia in mappa --> restituisco traduzione ma non aggiungo parola Aliena
-        		if (!dizionario.containsKey(parolaAliena)) {
-        			txtRisultato.setText(traduzione);
-        			Dizionario d = new Dizionario (parolaAliena, traduzione);
-        			dizionario.put(parolaAliena, d);
-        			txtParola.clear(); // pulisco il campo di testo
-        		}
-        		else {
-        			txtRisultato.setText(traduzione);
-        			txtParola.clear(); // pulisco il campo di testo
-        		}
-        			
-    			
-    		}
+        		for (WordEnhanced ww: dizionario) {
+    				if (ww.parolaAliena.equals(parolaAliena)) {
+    					for (String s : ww.traduzioni) {
+    						// parola e traduzione esistono TUTTE E DUE nel dizionario
+    						if (s.equals(traduzione)) {
+    							txtRisultato.setText(ww.toString());
+    	            			txtParola.clear(); // pulisco il campo di testo
+    	            			return ;
+    						}
+    					}
+    					// la parola esiste nel dizionario ma questa traduzione NO
+    					ww.traduzioni.add(traduzione);
+    					txtRisultato.setText(ww.toString());
+            			txtParola.clear(); // pulisco il campo di testo
+            			return ; 
+    				}
+    			}
+        		// la parola NON esiste nel dizionario 
+        		// se non esiste arrivo qua e quindi creo la parola e la aggiungo al dizionario
+        		WordEnhanced w = new WordEnhanced (parolaAliena);
+        		w.traduzioni.add(traduzione);
+       			dizionario.add(w);
+       			txtRisultato.setText(w.toString());
+       			txtParola.clear(); // pulisco il campo di testo
+       			return ;
+     
     	}
     	if (array.length ==1) {
     		parolaAliena = array[0];
@@ -82,19 +95,19 @@ public class FXMLController {
         		return ;
         		
         	}
-        	// se il dizionario non contiene la parola aliena
-        	if (!dizionario.containsKey(parolaAliena)) {
-        		txtRisultato.setText("Errore: la parola aliena '"+parolaAliena+"' non è presente nel dizionario");
-        		txtParola.clear(); // pulisco il campo di testo
-        		return ;
-        	}
-        	
-        	for (Dizionario d: dizionario.values()) {
-        		if (parolaAliena.equals(d.getParolaAliena())) {
-        			txtRisultato.setText(d.getTraduzione());
+        	// se il dizionario contiene la parola aliena restituisco le traduzioni
+        	for (WordEnhanced ww: dizionario) {
+				if (ww.parolaAliena.equals(parolaAliena)) {
+					txtRisultato.setText(ww.toString());
         			txtParola.clear(); // pulisco il campo di testo
-        		}
-        	}
+        			return ;
+				}
+			}
+        	// se il dizionario non contiene la parola aliena lo comunico 
+        	txtRisultato.setText("Errore: la parola aliena '"+parolaAliena+"' non è presente nel dizionario");
+        	txtParola.clear(); // pulisco il campo di testo
+        	return ;
+        	
     	}
     }
 
@@ -103,8 +116,9 @@ public class FXMLController {
     	txtRisultato.clear();
 
     }
+    
 
-    @FXML // This method is called by the FXMLLoader when initialization is complete
+	@FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
         assert txtParola != null : "fx:id=\"txtParola\" was not injected: check your FXML file 'Scene.fxml'.";
         assert btnTranslate != null : "fx:id=\"btnTranslate\" was not injected: check your FXML file 'Scene.fxml'.";
